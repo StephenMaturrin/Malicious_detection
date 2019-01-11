@@ -1,0 +1,126 @@
+
+# coding: utf-8
+
+# In[1]:
+
+
+
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+from sklearn import svm
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.model_selection import train_test_split
+from sklearn.model_selection import KFold
+from sklearn.linear_model import LogisticRegression
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.naive_bayes import GaussianNB
+from sklearn import metrics
+import warnings
+warnings.filterwarnings('ignore')
+#honest = pd.read_csv('honest_30.csv').values
+#malicious = pd.read_csv('malicious_30.csv').values
+#print(honest)
+#print(malicious)
+
+#df = np.concatenate( (honest,malicious) )
+df = pd.read_csv("data1.csv")
+df.set_index(['type'],inplace = True)
+X = df.iloc[:,1:16]
+y = df.iloc[:,-1]
+print(X)
+print(y)
+# Splitting the dataset into the Training set and Test set
+from sklearn.cross_validation import train_test_split
+train_X, test_X, train_Y,test_Y  = train_test_split(X, y, test_size = 0.2, random_state = 0)
+
+abc=[]
+classifiers=['Linear Svm','Radial Svm','Logistic Regression','KNN','Decision Tree', 'Random forest', 'Naive Bayes']
+models=[svm.SVC(kernel='linear'),svm.SVC(kernel='rbf',degree=3, probability=False,tol=0.001),LogisticRegression(C=0.1),
+        KNeighborsClassifier(n_neighbors=3),DecisionTreeClassifier(),
+        RandomForestClassifier(n_estimators=100,random_state=0), GaussianNB()]
+for i in models:
+    model = i
+    model.fit(train_X,train_Y)
+    prediction=model.predict( test_X)
+    abc.append(metrics.accuracy_score(prediction,test_Y))
+models_dataframe=pd.DataFrame(abc,index=classifiers)
+models_dataframe.columns=['Accuracy']
+models_dataframe.sort_values(['Accuracy'], ascending=[0])
+from sklearn import metrics
+from sklearn.metrics import (confusion_matrix, precision_recall_curve, auc, roc_curve, recall_score,
+                             classification_report, f1_score, average_precision_score, precision_recall_fscore_support)
+# Logistic regression
+modelLR = LogisticRegression()
+modelLR.fit(train_X,train_Y)
+y_pred_prob_lr = modelLR.predict_proba(test_X)[:,1]
+fpr_lr, tpr_lr, thresholds_lr = roc_curve(test_Y, y_pred_prob_lr)
+roc_auc_lr = auc(fpr_lr, tpr_lr)
+precision_lr, recall_lr, th_lr = precision_recall_curve(test_Y, y_pred_prob_lr)
+
+# SVM with rbf
+modelSVMrbf=svm.SVC(kernel='rbf', probability=True)
+modelSVMrbf.fit(train_X,train_Y)
+y_pred_prob_SVMrbf = modelSVMrbf.predict_proba(test_X)[:,1]
+fpr_SVMrbf, tpr_SVMrbf, thresholds_SVMrbf = roc_curve(test_Y, y_pred_prob_SVMrbf)
+roc_auc_SVMrbf = auc(fpr_SVMrbf, tpr_SVMrbf)
+precision_SVMrbf, recall_SVMrbf, th_SVMrbf = precision_recall_curve(test_Y, y_pred_prob_SVMrbf)
+
+# SVM with linear
+modelSVMlinear=svm.SVC(kernel='linear', probability=True)
+modelSVMlinear.fit(train_X,train_Y)
+y_pred_prob_SVMlinear = modelSVMlinear.predict_proba(test_X)[:,1]
+fpr_SVMlinear, tpr_SVMlinear, thresholds_SVMlinear = roc_curve(test_Y, y_pred_prob_SVMlinear)
+roc_auc_SVMlinear = auc(fpr_SVMlinear, tpr_SVMlinear)
+precision_SVMlinear, recall_SVMlinear, th_SVMlinear = precision_recall_curve(test_Y, y_pred_prob_SVMlinear)
+
+# KNN
+modelKNN = KNeighborsClassifier(n_neighbors=3)
+modelKNN.fit(train_X,train_Y)
+y_pred_prob_KNN = modelKNN.predict_proba(test_X)[:,1]
+fpr_KNN, tpr_KNN, thresholds_KNN = roc_curve(test_Y, y_pred_prob_KNN)
+roc_auc_KNN = auc(fpr_KNN, tpr_KNN)
+precision_KNN, recall_KNN, th_KNN = precision_recall_curve(test_Y, y_pred_prob_KNN)
+
+
+# Decision Tree
+modelTree=DecisionTreeClassifier()
+modelTree.fit(train_X,train_Y)
+y_pred_prob_Tree = modelTree.predict_proba(test_X)[:,1]
+fpr_Tree, tpr_Tree, thresholds_Tree = roc_curve(test_Y, y_pred_prob_Tree)
+roc_auc_Tree = auc(fpr_Tree, tpr_Tree)
+precision_Tree, recall_Tree, th_Tree = precision_recall_curve(test_Y, y_pred_prob_Tree)
+
+# Random forest
+modelRF= RandomForestClassifier(n_estimators=100,random_state=0)
+modelRF.fit(train_X,train_Y)
+y_pred_prob_rf = modelRF.predict_proba(test_X)[:,1]
+fpr_rf, tpr_rf, thresholds_rf = roc_curve(test_Y, y_pred_prob_rf)
+roc_auc_rf = auc(fpr_rf, tpr_rf)
+precision_rf, recall_rf, th_rf = precision_recall_curve(test_Y, y_pred_prob_rf)
+
+
+# Naive Bayes
+modelNB= GaussianNB()
+modelNB.fit(train_X,train_Y)
+y_pred_prob_nb = modelNB.predict_proba(test_X)[:,1]
+fpr_nb, tpr_nb, thresholds_nb = roc_curve(test_Y, y_pred_prob_nb)
+roc_auc_nb = auc(fpr_nb, tpr_nb)
+precision_nb, recall_nb, th_nb = precision_recall_curve(test_Y, y_pred_prob_nb)
+
+# Plot ROC curve
+plt.plot([0, 1], [0, 1], 'k--')
+plt.plot(fpr_lr, tpr_lr, label='Log Reg (area = %0.3f)' % roc_auc_lr)
+plt.plot(fpr_SVMrbf, tpr_SVMrbf, label='SVM rbf (area = %0.3f)' % roc_auc_SVMrbf)
+plt.plot(fpr_SVMlinear, tpr_SVMlinear, label='SVM linear (area = %0.3f)' % roc_auc_SVMlinear)
+plt.plot(fpr_KNN, tpr_KNN, label='KNN (area = %0.3f)' % roc_auc_KNN)
+plt.plot(fpr_Tree, tpr_Tree, label='Tree (area = %0.3f)' % roc_auc_Tree)
+plt.plot(fpr_rf, tpr_rf, label='RF (area = %0.3f)' % roc_auc_rf)
+plt.plot(fpr_nb, tpr_nb, label='NB (area = %0.3f)' % roc_auc_nb)
+#plt.plot(fpr_en, tpr_en, label='Ensamble (area = %0.3f)' % roc_auc_en)
+plt.xlabel('False Positive Rate')
+plt.ylabel('True Positive Rate')
+plt.title('ROC curves for 30% malcious nodes')
+plt.legend(loc='best')
+plt.show()
